@@ -27,6 +27,10 @@ class Movie(db.Model):
 class MovieSchema(Schema):
     id =fields.Int()
     title = fields.Str()
+    trailer = fields.Str()
+    rating = fields.Float()
+    # genre = fields.genre_id.Int()
+    # director = fields.director_id.Int()
 
 class Director(db.Model):
     __tablename__ = 'director'
@@ -51,9 +55,9 @@ movies_schema=MovieSchema(many=True)
 
 api = Api(app)
 
-movie_ns=api.namespaces('')
-director_ns=api.namespaces('')
-genre_ns=api.namespaces('')
+movie_ns = api.namespace('movies')
+director_ns=api.namespace('director')
+genre_ns=api.namespace('genre')
 
 @movie_ns.route('/')
 class MoviesView(Resource):
