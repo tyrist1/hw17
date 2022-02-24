@@ -25,12 +25,12 @@ class Movie(db.Model):
     director = db.relationship("Director")
 
 class MovieSchema(Schema):
-    id =fields.Int()
+    id = fields.Int()
     title = fields.Str()
     trailer = fields.Str()
     rating = fields.Float()
-    # genre = fields.genre_id.Int()
-    # director = fields.director_id.Int()
+    genre_id = fields.Int()
+    director_id = fields.Int()
 
 class Director(db.Model):
     __tablename__ = 'director'
@@ -53,6 +53,11 @@ class GenreSchema(Schema):
 movie_schema=MovieSchema()
 movies_schema=MovieSchema(many=True)
 
+genre_schema=GenreSchema()
+
+director_schema=DirectorSchema()
+
+
 api = Api(app)
 
 movie_ns = api.namespace('movies')
@@ -69,8 +74,35 @@ class MoviesView(Resource):
             res = res.filter(Movie.director_id == director_id)
         if genre_id is not None:
             res = res.filter(Movie.genre_id == genre_id)
+        if genre_id is not None and director_id is not None:
+            res = res.filter(Movie.genre_id == genre_id, Movie.director_id == director_id)
+
         result = res.all()
         return movies_schema.dump(result)
+
+    def post(self):
+        r_json = request.json
+        add_movie = Movie(**r_json)
+        with db.session.begin():
+            db.session.add(add_movie)
+        return  "", 201
+
+@movie_ns.route('/<int:uid>')
+class MovieView(Resource):
+    def get(self, uid):
+        movie=Movie.query.get(uid)
+        if not movie:
+            return "но ничего страшного", 404
+        return movie_schema.dump(movie)
+
+    def delete(self, uid):
+        movie = Movie.query.get(uid)
+        if not movie:
+            return "но ничего страшного", 404
+        else:
+            db.session.delete(movie)
+            db.session.commit()
+            return "", 204
 
 if __name__ == '__main__':
     app.run(debug=True)
