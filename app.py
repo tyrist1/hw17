@@ -104,5 +104,53 @@ class MovieView(Resource):
             db.session.commit()
             return "", 204
 
+################# директор
+@director_ns.route('/')
+class DirectorsView(Resource):
+    def get(self):
+        all_directors=Director.query.all()
+
+        return director_schema.dump(all_directors, many=True), 200
+
+    def post(self):
+        r_director_json = request.json
+        new_director = Movie(**r_director_json)
+        with db.session.begin():
+            db.session.add(new_director)
+        return  "", 201
+
+@director_ns.route('/<int:uid>')
+class DirectorView(Resource):
+    def get(self, uid):
+        director=Director.query.get(uid)
+        if not director:
+            return "но ничего страшного", 404
+        return director_schema.dump(director), 200
+
+    def delete(self, uid):
+        director = Director.query.get(uid)
+        if not director:
+            return "но ничего страшного", 404
+        else:
+            db.session.delete(director)
+            db.session.commit()
+            return "", 204
+    def put(self, uid):
+        director = Director.query.get(uid)
+        reg_new_json=request.json
+        director.name = reg_new_json.get("name")
+        db.session.add(director)
+        db.session.commit()
+        return "новый директор зареген", 204
+
+    def patch(self, uid):
+        director = Director.query.get(uid)
+        reg_new_json=request.json
+        if "name" in reg_new_json:
+            director.name = reg_new_json.get("name")
+        db.session.add(director)
+        db.session.commit()
+        return "частичное изм. директора", 204
+
 if __name__ == '__main__':
     app.run(debug=True)
