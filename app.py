@@ -152,5 +152,53 @@ class DirectorView(Resource):
         db.session.commit()
         return "частичное изм. директора", 204
 
+################# жанры
+@genre_ns.route('/')
+class GenresView(Resource):
+    def get(self):
+        all_genre=Genre.query.all()
+
+        return genre_schema.dump(all_genre, many=True), 200
+
+    def post(self):
+        r_genre_json = request.json
+        new_genre = Movie(**r_genre_json)
+        with db.session.begin():
+            db.session.add(new_genre)
+        return  "", 201
+
+@genre_ns.route('/<int:uid>')
+class GenreView(Resource):
+    def get(self, uid):
+        genre=Genre.query.get(uid)
+        if not genre:
+            return "но ничего страшного", 404
+        return genre_schema.dump(genre), 200
+
+    def delete(self, uid):
+        genre = Genre.query.get(uid)
+        if not genre:
+            return "но ничего страшного", 404
+        else:
+            db.session.delete(genre)
+            db.session.commit()
+            return "", 204
+    def put(self, uid):
+        genre = Genre.query.get(uid)
+        reg_new_json=request.json
+        genre.name = reg_new_json.get("name")
+        db.session.add(genre)
+        db.session.commit()
+        return "новый жанр зареген", 204
+
+    def patch(self, uid):
+        genre = Director.query.get(uid)
+        reg_new_json=request.json
+        if "name" in reg_new_json:
+            genre.name = reg_new_json.get("name")
+        db.session.add(genre)
+        db.session.commit()
+        return "частичное изм. жанра", 204
+
 if __name__ == '__main__':
     app.run(debug=True)
